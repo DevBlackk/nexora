@@ -328,37 +328,21 @@ A arquitetura deverá separar regras de negócio de detalhes de interface, banco
 
 ### Arquitetura de alto nível
 
-```text
-[Interface Web]
-      |
-      v
-[API / Casos de Uso]
-      |
-      +------------------+
-      |                  |
-      v                  v
-[Domínio Financeiro]  [Serviços de Aplicação]
-      |                  |
-      v                  +------> [Agendador / Eventos]
-[Persistência]                    |
-                                 +------> [Notificações]
-                                 |
-                                 +------> [Provedor de IA]
-                                 |
-                                 +------> [Adaptador Open Finance]
-```
+flowchart TD
+    A[Interface Web] --> B[API / Casos de Uso]
 
-```drawio width=800
-<mxfile>
-  <diagram id="default" name="Page-1">
-    <mxGraphModel>
-      <root>
-        <mxCell id="0"/>
-        <mxCell id="1" parent="0"/>
-      </root>
-    </mxGraphModel>
-  </diagram>
-</mxfile>
+    B --> C[Domínio Financeiro]
+    B --> D[Serviços de Aplicação]
+
+    C --> E[Persistência]
+
+    D --> F[Agendador / Eventos]
+    D --> G[Notificações]
+    D --> H[Provedor de IA]
+    D --> I[Adaptador Open Finance]
+
+    I --> J[Provedor Bancário]
+    G --> K[Canal de Notificação Externa]r Open Finance]
 ```
 
 
