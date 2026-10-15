@@ -328,25 +328,38 @@ A arquitetura deverá separar regras de negócio de detalhes de interface, banco
 
 ### Arquitetura de alto nível
 
+```mermaid
 flowchart TD
-    A[Interface Web] --> B[API / Casos de Uso]
+    A["Interface Web"] --> B["API / Casos de Uso"]
 
-    B --> C[Domínio Financeiro]
-    B --> D[Serviços de Aplicação]
+    B --> C["Domínio Financeiro"]
+    B --> D["Serviços de Aplicação"]
 
-    C --> E[Persistência]
+    D --> E["Agendador / Eventos"]
+    D --> F["Notificações"]
+    D --> G["Provedor de IA"]
+    D --> H["Adaptador Open Finance"]
 
-    D --> F[Agendador / Eventos]
-    D --> G[Notificações]
-    D --> H[Provedor de IA]
-    D --> I[Adaptador Open Finance]
+    B --> I["Interfaces de Persistência"]
+    I --> J[("Banco de Dados")]
 
-    I --> J[Provedor Bancário]
-    G --> K[Canal de Notificação Externa]r Open Finance]
+    H --> K["Provedor Bancário"]
+    F --> L["Canal de Notificação Externa"]
+
+    classDef frontend fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef application fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef domain fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef infrastructure fill:#f3e8ff,stroke:#9333ea,color:#581c87
+    classDef database fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+
+    class A frontend
+    class B,D,E application
+    class C domain
+    class F,G,H,K,L infrastructure
+    class I,J database
 ```
 
-
-Este diagrama é conceitual. A divisão física entre serviços, processos e aplicações deverá ser decidida com base no escopo e no custo operacional. Para o início, uma aplicação modular única pode ser mais simples de manter do que uma arquitetura de microserviços.
+> **Nota arquitetural:** Este diagrama apresenta uma visão conceitual da arquitetura do Nexora. A divisão física entre serviços, processos e aplicações será definida de acordo com o escopo e o custo operacional. Inicialmente, uma aplicação modular única (*monólito modular*) pode ser mais simples de desenvolver e manter do que uma arquitetura de microsserviços.
 
 ---
 
