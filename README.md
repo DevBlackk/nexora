@@ -1,203 +1,131 @@
-# Nexora
+# nexora-api
 
-> **Inteligência para sua vida financeira.**
+API do **Nexora**, um gerenciador financeiro pessoal de uso exclusivo do titular. Recebe e organiza contas, transações, compromissos, dívidas e configurações de alertas, sincroniza dados com o Meu Pluggy (Open Finance) e dispara os alertas diários por e-mail.
 
-O Nexora é um gerenciador financeiro pessoal, desenvolvido para uso exclusivo do titular. Seu objetivo é centralizar as informações financeiras, organizar dívidas e orçamento, acompanhar metas e avisar sobre eventos relevantes, como vencimentos e risco de saldo insuficiente.
+> **Status:** em desenvolvimento. A estrutura inicial existe (servidor Fastify, regra monetária em centavos e testes), mas ainda não foi validada com `npm test` no ambiente de desenvolvimento. Nenhuma funcionalidade de negócio foi concluída.
 
-> **Status:** em planejamento. Nenhuma funcionalidade foi implementada ainda.
-> **Escopo:** aplicação de uso pessoal. Não é um produto SaaS nem um serviço financeiro oferecido a terceiros.
+Documentação completa do projeto: **Nexora — Dashboard** no Notion.
+Decisões e descobertas: **Registro de decisões e descobertas (até 16/10/2026)**.
+Requisitos e escopo: **Requisitos e escopo**. Arquitetura e stack: **Arquitetura e infraestrutura**. Análise da integração bancária: **Análise D-01 — Estratégia de acesso aos dados bancários**.
 
 ---
 
 ## Premissas
 
-- **Uso pessoal.** Não há multiusuário, organizações nem funcionalidades empresariais.
-- **Custo zero.** Nenhum serviço pago entra no projeto sem aprovação explícita do titular.
-- **Privacidade.** Dados financeiros ficam sob controle do titular. Notificações não contêm valores completos de contas ou dívidas.
-- **Sem operações automáticas.** Nenhuma transferência, pagamento ou renegociação é executada sem autorização explícita.
-- **Cálculo determinístico.** Juros, amortizações, projeções e alertas são calculados por código testável.
-
-## Objetivos
-
-1. Centralizar contas, transações e saldos em um só lugar.
-2. Distinguir saldo bancário, valores comprometidos e dinheiro livre.
-3. Organizar dívidas, parcelas e vencimentos.
-4. Projetar o fluxo de caixa até o próximo recebimento.
-5. Alertar sobre riscos com antecedência suficiente para agir.
-6. Servir como projeto de aprendizado de engenharia de software.
-
----
+- **Uso pessoal.** Não é SaaS, não tem multiusuário e não tem funcionalidades empresariais.
+- **Custo zero.** Nenhum serviço pago entra sem aprovação explícita do titular.
+- **Dinheiro em centavos inteiros.** Nunca usar ponto flutuante para valores monetários.
+- **Sem operações financeiras automáticas.** Nenhuma transferência, pagamento ou renegociação é executada.
+- **Dados reais fora do código.** Testes, fixtures e documentação usam apenas dados fictícios.
 
 ## Escopo do MVP
 
-Escopo aprovado pelo titular em 15/10/2026.
+Aprovado pelo titular em 15/10/2026, com a integração Meu Pluggy incluída em 16/10/2026.
 
-- Autenticação simples para o titular.
-- Cadastro de contas e saldos informados.
-- Importação de extratos em OFX e CSV, com deduplicação e registro de origem.
-- Cadastro e categorização manual de transações.
-- Registro de receitas, incluindo salário, e de compromissos recorrentes.
-- Cadastro de dívidas, com histórico de saldo.
-- Projeção diária de saldo ao longo do mês.
-- Alertas por e-mail, conforme abaixo.
-- Indicação da data de atualização dos dados em cada alerta e tela.
+- Autenticação simples do titular, com sessão e controle de acesso nas rotas de dados.
+- Cadastro de contas com saldo informado pelo titular e data do saldo.
+- Importação de OFX e CSV, com registro de origem e deduplicação.
+- Cadastro manual de transações, categorização manual e filtros por período, conta e categoria.
+- Receitas, compromissos recorrentes e parcelas.
+- Dívidas, com cálculo pelo método informado no contrato e histórico de saldo.
+- Projeção diária de saldo até o fim do mês.
+- Integração com o Meu Pluggy: conexão, sincronização de contas, cartões e transações, status dos itens e desconexão.
+- Alertas por e-mail, enviados uma vez por dia às 12h, com no máximo 5 por dia.
 
-### Alertas do MVP
+### Alertas
 
-Envio por e-mail, **uma vez por dia, às 12h**, com no máximo **5 alertas por dia**.
-
-| Evento | Condição |
-|---|---|
-| Vencimento próximo | Conta, fatura ou parcela vence em até 3 dias |
-| Saldo projetado abaixo do limite | Projeção dos próximos 7 dias fica abaixo do valor mínimo (padrão R$ 250, personalizável) |
-| Recebimento não identificado | Receita prevista não aparece até 1 dia após a data prevista |
-| Dados desatualizados | Nenhuma importação há mais de 7 dias |
+| Evento | Condição | Padrão |
+|---|---|---|
+| Vencimento próximo | Conta, fatura ou parcela vence em até 3 dias | 3 dias |
+| Saldo projetado abaixo do mínimo | Projeção dos próximos 7 dias fica abaixo do saldo mínimo | R$ 250, personalizável |
+| Recebimento não identificado | Receita prevista não aparece até 1 dia após a data | 1 dia de tolerância |
+| Dados desatualizados | Última importação ou sincronização há mais de 7 dias | 7 dias |
 
 Pendente: confirmar se o relatório diário conta no limite de 5 alertas.
 
-### Fora do MVP
-
-- Integração bancária automática (planejada, veja Open Finance).
-- Assistente de IA (decisão do titular: MVP sem IA).
-- Comparação entre avalanche e bola de neve, e simulação de amortizações extraordinárias.
-- Metas e reserva de emergência.
-- Monitoramento de orçamento por categoria.
-- Alertas por WhatsApp, Telegram ou outros canais.
-
----
-
-## Dívidas
-
-O cálculo de juros e parcelas usará o método informado em cada contrato, validado com pelo menos um caso real, sem dados de conta. A escolha entre PRICE e SAC para simulações futuras fica para depois.
-
-Essa abordagem é a decisão **D-09**, ainda pendente de validação com um contrato real.
-
----
-
-## Integração bancária (Open Finance)
-
-**Direção decidida pelo titular:** integração automática pelo **Meu Pluggy**, a conta pessoal gratuita da Pluggy. A importação manual de OFX permanece como contingência.
-
-Condições e pontos conhecidos:
-
-- Cobertura confirmada, no contexto pessoal, para Itaú, Nubank, PicPay, Banco do Brasil e Mercado Pago, com contas, transações e cartões.
-- Plano gratuito de uso pessoal, com até 5 conexões ativas, segundo a documentação oficial da Pluggy.
-- **A verificar no início do desenvolvimento:** se cada instituição consome uma única conexão, cobrindo conta e cartão. Se o limite contar contas separadamente, o plano não comporta os cinco bancos e o modelo de conexões precisará ser revisto.
-- **Risco aceito pelo titular:** a verificação do status regulatório da Pluggy junto ao Banco Central não será feita antes do desenvolvimento.
-
-A integração será feita por meios autorizados e documentados. Não há raspagem de portais bancários nem armazenamento de senhas bancárias.
-
----
-
-## Inteligência artificial
-
-**Decisão D-07:** o MVP será desenvolvido sem IA.
-
-Quando for adotada, a IA deverá apenas explicar resultados já calculados pelo sistema. Não calculará valores, não preencherá dados ausentes e não executará operações financeiras. A preferência é que ela rode localmente, para não enviar dados financeiros a terceiros.
-
----
-
-## Stack
-
-Stack aprovada pelo titular em 15/10/2026.
-
-| Camada | Tecnologia |
-|---|---|
-| Linguagem | TypeScript, no back-end e no front-end |
-| Servidor | Fastify |
-| Banco de dados | SQLite |
-| ORM | Drizzle |
-| Front-end | React com Vite |
-| Testes | Vitest |
-| Agendamento | node-cron |
-| E-mail | Nodemailer, com provedor gratuito a confirmar |
-
-**Pendências técnicas:** verificar se a biblioteca de leitura de OFX está mantida antes de adotá-la; confirmar o provedor gratuito de e-mail.
-
-Valores monetários são representados em centavos inteiros, nunca em ponto flutuante.
-
----
-
-## Arquitetura
-
-Aplicação modular única (monólito modular), com fronteiras internas claras:
-
-- **Domínio:** entidades e regras financeiras, sem dependência de framework, banco ou serviços externos.
-- **Aplicação:** casos de uso e coordenação de fluxos.
-- **Infraestrutura:** persistência com SQLite, adaptador do provedor bancário, envio de e-mail e agendamento.
-- **Interface:** aplicação React que consome a API.
-
-Integrações externas ficam atrás de contratos internos, para permitir trocar o provedor sem alterar o domínio.
-
----
-
-## Segurança e privacidade
-
-- Segredos, como credenciais do Meu Pluggy, ficam em variáveis de ambiente, nunca no repositório.
-- O arquivo `.env` real não é versionado. O `.env.example` contém apenas nomes de variáveis.
-- Nenhum dado financeiro real entra em testes, exemplos, capturas de tela ou documentação.
-- Logs não registram dados sensíveis.
-- Backups locais são feitos por cópia do arquivo do banco, com restauração testada.
-- Política de retenção, exportação e exclusão de dados ainda será definida.
-- A LGPD e os termos dos fornecedores devem ser avaliados antes de conectar contas reais. Este README não constitui parecer jurídico.
-
----
+Fora do MVP: IA, comparação de estratégias de quitação (avalanche e bola de neve), simulação de amortizações extraordinárias, metas e reserva, e alertas por WhatsApp ou Telegram.
 
 ## Decisões técnicas
 
 | ID | Tema | Situação |
 |---|---|---|
-| D-01 | Acesso aos dados bancários | Decidida: Meu Pluggy, com OFX como contingência. Dois pontos pendentes (limite de conexões e status regulatório, este último aceito como risco) |
+| D-01 | Acesso aos dados bancários | Meu Pluggy, com OFX como contingência. Limite de 5 conexões em validação |
 | D-07 | Uso de IA | Decidida: sem IA no MVP |
-| D-08 | Escopo do MVP | Aprovado pelo titular |
-| D-09 | Regras de juros | Abordagem aprovada: método do contrato, validado com caso real |
-| — | Stack | Aprovada pelo titular |
+| D-08 | Escopo do MVP | Aprovado |
+| D-09 | Regras de juros | Método do contrato, validado com caso real (pendente) |
 
-Os registros detalhados ficam na documentação de decisões do projeto (Notion).
+## Stack
 
----
+| Camada | Tecnologia |
+|---|---|
+| Linguagem | TypeScript |
+| Servidor | Fastify |
+| Banco de dados | SQLite |
+| ORM | Drizzle |
+| Testes | Vitest |
+| Agendamento | node-cron |
+| E-mail | Nodemailer (provedor gratuito a confirmar) |
 
-## Roadmap
+## Integração com o Meu Pluggy
 
-As etapas abaixo são uma sequência recomendada. Estimativas não foram definidas.
+- Conexões são feitas pelo conector **MeuPluggy (id 200)**, que é a rota gratuita para uso pessoal.
+- Cada banco conectado cria um item separado. Conta corrente e cartão do mesmo banco ficam no mesmo item.
+- O plano gratuito permite **5 conexões ativas**, aplicadas pelo Meu Pluggy na criação de novas conexões.
+- Bancos atualmente conectados no ambiente de teste: PicPay, Nubank, Itaú e Mercado Pago. Banco do Brasil pendente.
+- O sandbox (Pluggy Bank) é sintético, não representa bancos reais e não ocupa vaga do Meu Pluggy.
+- Itens sem atualização há 30 dias no sandbox são excluídos pela Pluggy.
+- A verificação do status regulatório da Pluggy no Banco Central está pendente. Esse risco foi aceito pelo titular.
 
-1. **Fundação:** repositório, convenções de Git, ambiente de desenvolvimento e configuração de segredos.
-2. **Domínio financeiro básico:** contas, transações, categorias e receitas, com testes de cálculo de saldo.
-3. **Orçamento e fluxo de caixa:** compromissos recorrentes, projeção diária e cenários de saldo insuficiente.
-4. **Dívidas:** cadastro, histórico de saldo e cálculo pelo método do contrato.
-5. **Alertas:** motor de regras, envio diário por e-mail às 12h e prevenção de duplicidades.
-6. **Integração bancária:** teste de conexões com o Meu Pluggy, sincronização e tratamento de falhas.
-7. **Evolução:** comparação de estratégias de quitação, metas e reserva, e avaliação de IA local.
+## Organização do código (prevista)
 
----
+- **Domínio:** regras financeiras, sem dependência de framework, banco ou serviços externos.
+- **Aplicação:** casos de uso e coordenação dos fluxos.
+- **Infraestrutura:** SQLite, cliente Pluggy, e-mail e agendamento, atrás de contratos internos.
+- **Entrada:** rotas HTTP do Fastify.
 
-## Estratégia de testes
+Os diretórios serão definidos durante a implementação.
 
-- **Unitários:** cálculos de saldo, projeção, vencimentos, juros e arredondamento. Cada regra financeira com casos conhecidos e entradas inválidas.
-- **Integração:** persistência, migrações, importação com deduplicação, adaptadores externos e envio de e-mail simulado.
-- **Ponta a ponta:** registrar receitas e despesas, cadastrar uma dívida, importar um arquivo e disparar um alerta de teste.
+## Configuração
 
-Todos os testes usam dados fictícios.
+Copie `.env.example` para `.env` e preencha os valores. O `.env` nunca é versionado.
 
----
+| Variável | Uso |
+|---|---|
+| `PORT` | Porta do servidor (padrão 3000) |
+| `DATABASE_PATH` | Caminho do arquivo SQLite |
+| `PLUGGY_CLIENT_ID` | Credencial da aplicação Pluggy |
+| `PLUGGY_CLIENT_SECRET` | Segredo da aplicação Pluggy |
+
+Nunca compartilhe `PLUGGY_CLIENT_SECRET`. Se ele vazar, regenere no painel da Pluggy.
 
 ## Como executar
 
-Ainda não aplicável. Os comandos de instalação, migração, testes e execução serão documentados quando o código existir.
+```bash
+npm install
+npm test          # testes de dinheiro e da rota de saúde
+npm run typecheck # verificação de tipos
+npm run dev       # servidor em modo de desenvolvimento
+```
 
----
+Rota disponível: `GET /health`, que responde `{ "status": "ok" }`.
 
-## Documentação
+## Testes
 
-A documentação do projeto fica no Notion: requisitos e escopo, roadmap, arquitetura, pesquisa de Open Finance, segurança e LGPD, decisões técnicas, testes e Kanban de tarefas.
+- **Unitários:** regras de dinheiro, cálculo de saldo, projeção, vencimentos e alertas. Cada regra com casos conhecidos e entradas inválidas.
+- **Integração:** persistência, migrações, importação com deduplicação e adaptador da Pluggy com respostas simuladas.
+- **Ponta a ponta:** conexão dos cinco bancos reais, sincronização e alerta de teste. Pendente até o Banco do Brasil ser conectado.
 
----
+## Segurança
+
+- Segredos apenas em variáveis de ambiente.
+- Logs sem valores de contas, CPF, tokens ou conteúdo de arquivos importados.
+- Rotas de dados exigem sessão válida.
+- Backup por cópia do arquivo SQLite, com teste de restauração.
+
+## Contribuição
+
+Commits pequenos e descritivos, no formato `feat:`, `fix:`, `test:`, `docs:` ou `refactor:`. Cada tarefa tem critérios de conclusão no Kanban. O README da API é atualizado ao concluir cada épico, com base no Notion.
 
 ## Licença
 
-Ainda não definida. A decisão de tornar o projeto público e permitir reutilização deve ser tomada explicitamente antes de adicionar uma licença.
-
----
-
-**Nexora**
-*Inteligência para sua vida financeira.*
+Ainda não definida.
