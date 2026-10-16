@@ -1,0 +1,32 @@
+{
+  "name": "nexora-api",
+  "version": "1.0.0",
+  "description": "API do **Nexora**, um gerenciador financeiro pessoal de uso exclusivo do titular. Recebe e organiza contas, transações, compromissos, dívidas e configurações de alertas, sincroniza dados com o Meu Pluggy (Open Finance) e dispara os alertas diários por e-mail.",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevBlackk/nexora-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/DevBlackk/nexora-api/issues"
+  },
+  "homepage": "https://github.com/DevBlackk/nexora-api#readme",
+  "dependencies": {
+    "fastify": "^5.12.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
